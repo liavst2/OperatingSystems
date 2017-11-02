@@ -1,0 +1,124 @@
+itamakatz, liavst2
+Itamar Katz (555792977) , Liav Steinberg (203630090)
+EX: 4
+
+===================================
+=             FILES               =
+===================================
+
+- README - this file.
+- Makefile
+- CachingFileSystem.cpp
+- Cache.cpp
+- LogFile.cpp
+- Cache.h
+- LogFile.h
+- Block.h
+- Block.cpp
+
+
+===================================
+=            DESIGN              =
+===================================
+
+Our Cache is an independent unit in our implementation.
+In CachingFileSystem.cpp the functions that call the cache
+are read and ioctl only. 
+Read calls the "collect" function which retrieves the wanted
+information from the cache. Given the offset and the size
+to read, collect calculates the starting and ending block 
+indexes to search in the cache. If the block doesnt exists,
+collect calls the private function _cache_add to add this block
+to the cache. If the block exists, collect calls _cache_replace
+to place the current block on top of the Cache container.
+All these blocks are placed in array, ordered by their 
+sequential access. Then we start to copy the content of the
+blocks to "buf" using memcpy, and the wanted offset and size.
+
+In ioctl, the cache simply summons the logfile on each block
+in its repository. The logfile writes the block information
+down. 
+
+===================================
+=            ANSWERS              =
+===================================
+
+
+1. We know that accessing the disk is way slower than accessing
+     the memory because the memory is physically closer to the
+     cpu. In this excersice we store our information on the heap.
+     If the heap is located in the RAM, it will be more efficient to 
+     read from it. But if the heap is located elsewhere, then our
+     cache advantage will be lost. Also, searching in the cache may
+     take time too if we are handling large amount of filele
+
+
+2. In class, we saw there is a trade-off between sophisticated
+     algorithm and a fast cache management. We require minimum
+     time to handle a buffer cache managed by the OS because it
+     is constantly changing.
+
+
+3. LRU is better:
+     files -> test1, test2, test3
+     read ->  
+     test1, 
+     test1, 
+     test2, 
+     test2, 
+     test3, 
+     test3, 
+
+     LFU is better:
+     Files -> test 1, test 2, test 3, test 4.
+     read ->
+     test 1
+     test 2
+     test 3
+     test 1
+     test 1
+     test 1
+     test 1
+     test 1
+     test 2
+     test 3
+     test 4
+
+
+     Niether is better:
+     Files -> test 1, test 2, test 3, test 4.
+
+     Read: 
+     test 1
+     test 2
+     test 3
+     test 4
+     test 1
+     test 2
+     test 3
+     test 4
+
+
+
+4. Because there can be an intensive use in the same 
+     segment for a short period of time(This is called
+     the locality principle as we saw) and then wont be
+     in use anymore. That can happen to a block in the 
+     new section, increasing the block's reference count
+     wont achieve this goal.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

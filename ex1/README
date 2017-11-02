@@ -1,0 +1,50 @@
+itamakatz, liavst2
+Itamar Katz (555792977) , Liav Steinberg (203630090)
+EX: 1
+
+===================================
+=             FILES               =
+===================================
+
+- README - this file.
+- makefile
+- osm.cpp - implementation of osm.h
+
+===================================
+=            ANSWERS              =
+===================================
+
+Task 1:
+======
+The program "WhatIDo" creates a directory "Welcome" with the syscall 
+"mkdir" and inside of it another directory named "To", also with "mkdir". 
+Then,  the program opens a file inside of "To", named "OS", for write only 
+(O_WRONLY). The returned value 3 is the file descriptor used to "identify" 
+the file, and used later in "write" to write to the file a message that says 
+"If you didn't read the course guidelines, please do it now!". Then the 
+program removes the file and the directories (using "unlink" and "rmdir").
+
+Task 2:
+======
+The osm_init and finalizer are called before and after every other library
+function. We implemented them to open and close one file for the disk 
+access timing function. In the four main functions of the library we used 
+the gettimeofday function to measure the time differences before and after 
+the loop. In the loop we used loop unrolling, meaning in each iteration we 
+added 5 more independent operation, excluding the one that we wanted to time. 
+The reason for that is decreasing the assembly-language code meant to check 
+the loop condition, so it would not affect the time measuring of the wanted 
+operation. The 6 operation inside the loop are independent, so they would, 
+as well, not affect the time measuring by decreasing the delay on the machine
+pipline. We returned the time differnce between the two calls of gettimeofday, 
+divided by the number of the iterations to get the average time.
+
+*Notice that we counted on the user to use osm_init and osm_finalizer before
+ and after using the library, and hence we started with "fclose" operation
+ and ended with "fopen" in the osm_disk_time loop , knowing that the file
+ will be open and closed properly.
+
+
+
+
+ 

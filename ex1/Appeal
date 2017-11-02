@@ -1,0 +1,24 @@
+itamakatz, liavst2
+Itamar Katz (555792977) , Liav Steinberg (203630090)
+EX: 1
+
+======================================
+=         	 DESCRIPTION       		 =
+======================================
+
+1.  In the function measureTimes, we didn't allocate memory for
+	"machineName", so the program terminated with segmentation fault.
+	(it worked on Code::Blocks, but on Clion it threw seg fault)
+	therefore, we added the following line:
+	"times.machineName = new char[HOST_LEN]; " where 
+	HOST_LEN = 1024 (on line 208 in osm.cpp).
+	That fixed the problem.
+
+2.  Also, there were "operation has no effect" warnings in the 
+	makefile compilation (because of the operation_time function).
+	So we added the specific "-Wno-unused-value" flag to suppress them.
+	 The compilation now is clean of warnings.
+
+3. Line 234 exceeded, fixed.
+
+Those 2 lines are the only lines that were changed. 

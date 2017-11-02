@@ -1,0 +1,86 @@
+itamakatz, liavst2
+Itamar Katz (555792977) , Liav Steinberg (203630090)
+EX: 2
+
+===================================
+=             FILES               =
+===================================
+
+- README - this file.
+- makefile
+- uthreads.cpp
+
+===================================
+=            ANSWERS              =
+===================================
+
+
+Part 2: Theoretical Questions:
+=============================
+ 
+1.  Kernel level threads, unlike processes, share most of its context
+    with the rest of the threads. Due to that, threads are 
+    fundamentally designed to work together with other threads since
+    all threads have complete access to the processes heep, code, 
+    global variables etc. In other words, unlike processes, threads 
+    are not independent of one another.
+    A tab in a browser could be implemented with a kernel level thread
+    but it seems pointless since there is no reason to assume tabs are
+    dependent one of the other and its not logical to give each tab 
+    the ability to access and change info of other threads.
+    Besides that, a process tend to have more memory to use since by 
+    implementing threads, memory is needed for the PCB.
+
+    Kernel level threads and processes have in common that they are
+    not blocked when a single process or thread get blocked (unlike 
+    user level threads) and that they can take advantage of 
+    multiprocessing.
+
+    Kernel level threads minimize context switching in comparison to 
+    processes and thus lowers the general overhead. In addition, since
+    they share memory, kernel level threads can communication 
+    considerably fast and efficiently.
+
+    On the other hand, processes tend to manage memory more 
+    efficiently since there is no need of a PCB for each internal 
+    thread. And as stated before, even though processes can cope with 
+    each other, unlike threads they do not have to share memory and
+    information, making the process potentially autonomous and  
+    independent. The latter is important since there is no impact on 
+    other processes in case of failure, in contrast to threads. 
+
+
+2.  We chose to send the kill signal to "pluma" (with the pid 27469). 
+    The kill signal is a tool to communicate with other processes 
+    using a signal. by typing "kill 27469", which by default sends the 
+    SIGTERM signal to the process, we send the kill signal which by 
+    definition cannot be handled by a process which then is handled by
+    the OS terminating the process.  
+
+
+3.  Real time, is the physical time as we know it. Virtual time is 
+    defined by the ability to manipulate the fixed beginning of time 
+    as we wish. It can be stopped, reset, extended and done with 
+    whatever we want, since it does not represent the physical world.
+    Real time can be used for example to measure the time a function 
+    is executed (like we did in ex1) and virtual time can be used to 
+    schedule the run of user-level threads (like we are doing in this 
+    exercise).
+
+
+4a. When using fork, a child process is spawned. The child process is
+    an exact duplicate of its parent process meaning all the data in
+    the global variables, stack and heap is identical at the spawning
+    point, but it is physically not the same memory, stored in
+    different locations, thus not shared, so from that point on, none
+    of the above is common between the processes.
+
+
+4b. A pipe is an implementation of a communication channel for 
+    processes. It contains an array with only 2 slots where one slot 
+    is exclusively for writing data and the other is exclusively for 
+    reading data. The array is connected to the FDs Table in a way 
+    that two processes can communicate.
+    since processes are mostly autonomous and they do not share 
+    memory, the pipe is needed for complex communication between 
+    processes other than just signal communication like kill. 

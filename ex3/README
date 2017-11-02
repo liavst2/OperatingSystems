@@ -1,0 +1,169 @@
+itamakatz, liavst2
+Itamar Katz (555792977) , Liav Steinberg (203630090)
+EX: 3
+
+===================================
+=             FILES               =
+===================================
+
+- README - this file.
+- Makefile
+- FrameControl.h
+- FrameControl.cpp
+- MapReduceFramework.cpp - MapReduce implementation
+- Search.cpp - first part of this EX
+- 4 jpg images for question 6
+
+===================================
+=            DESIGN               =
+===================================
+
+MapReduceFramework.cpp:
+======================
+
+- Implemented a separate class for the log file.
+- We set the Map chunk size to 8, and Reduce set size to 6 (arbitrarily)
+  Every thread that finishes a chunk sends a wake-up signal the shuffle
+  to start working(Shuffle waits in a loop, using cond_timedwait).
+- We set the waiting time of shuffle to 10000000 ns (0.01 sec as writen 
+  in the pdf).
+- Main thread joins the ExecMap and shuffle threads to ensure it can continue
+  to Reduce.
+- In Map and Reduce, we created a thread vector to hold the threads. The
+  reason is that we need to join all of them until they finish their job, 
+  before we reach the next stage.
+- Emit2 function writes to a map <pthread_t, queue<pair<k2,v2>>> using
+  pthread_self to ensure that every thread writes to different locations,
+  thus avoiding the usage of another mutex. The reason of using queue is that,
+  when shuffle sorts elements it pops the head element from this queue , not 
+  interfering with ExecMap that may also write to the same queue, to its end.
+- Emit3 function writes to a map <pthread_t, list<pair<k3,v3>>> also to ensure
+  that every thread writes to different locations.
+- On producing the final output stage, we created a comparator that uses 
+  operator < to sort the data.
+- Every stage is surrounded by a tic-toc block to measure the time it takes
+  to execute it.
+
+Search.cpp:
+==========
+
+- Created three classes: Dir, Substring, File.
+- For the Framework input, we prepared a list of pair<Substring*, Dir*> where
+  Substring in the substring to search, given by the user, and Dir 
+  represents each directory path. 
+- Our Map function recieves the substring and a directory path and produces
+  a list of <Substring*, File*> where Substring in the given substring and
+  File represent a file name in the given directory.
+- Our Reduce function recieves the substring and a list of files and calls
+  Emit3 function only with the files that hold this substring.
+- Emit3 recieves a pair<File*, NULL>, and the framework returns a list of 
+  these pairs.
+- On the printing stage, we collect every pair in the framework output and 
+  print its key, which is the wanted file name.
+
+
+===================================
+=            ANSWERS              =
+===================================
+
+
+Part 2: Theoretical Questions:
+=============================
+
+1. Because the whole purpose of select is to monitor multiple file
+   descriptors, waiting until one or more of them becomes "ready"
+   for IO operation, it is clear that Shuffle needs to use it, to monitor
+   what file descriptor is now ready for sorting its data. So it will also
+   be the thread that reads from the pipe. Our idea of implementing this
+   is to fork a process for each ExecMap thread. The processes will
+   communicate with Shuffle process using pipes, one for each thread.
+   There is also one more pipe to communicate between Shuffle and the
+   main process.
+   Each ExecMap writes to his pipe a string representing the pair he output.
+   Shuffle, which uses select to detect which pipe is ready, reads
+   this string and checks its key. Shuffle writes to the main process
+   pipe the pair itself, along with a position representing where he
+   should place this pair in his data structure. This can be done in the
+   same manner as g_shuffleStructs is implemented. The last process to
+   finish his job should send a signal to notify Shuffle to also finish
+   his job.
+
+2. Because of the lack of hyper-threading support, each core will run in a 
+   single thread mode, leaving us with multiThreadLevel of 6, as two cores
+   are occupied by main thread and shuffle.
+
+3. In Nira's case:
+	   	a. her program cannot occupy more than a single processor,
+	   	   so utilization for multi cores will be at the minimum.
+		b. Because she uses a "single flow", there is no need for a scheduler.
+		c. Also there is no need for communication beacuse there is a single
+		   thread and process.
+		d. Becuase of the "single flow", the whole process will stop progress
+		   in case of a block.
+		e. Overall speed is relatively slow, because the relative size of the
+		   program and the fact that is a single thread running.
+   In Moti's case:
+		a. He uses kernel-level threads which can run on different processors
+		   and cores, so utilization can be high.
+		b. The scheduler is supplied by the OS so it must be sophisticated.
+		c. Simple communication between the threads - low communication time.
+		d. If a thread blocks, this does not affect the others. Meaning the
+		   ability to progress exists.
+		e. Operations require a kernel trap, but little work - relatively high
+		   overall speed.
+   In Danny's case:
+		a. All threads must share the same processor - low utilization.
+		b. The ability to create such scheduler is decreasing, because the
+           user may make some mistakes, rather than the OS itself.
+		c. As with kernel-level threads, simple communication - low 
+		   communication time.
+        d. If a thread blocks, the whole process is blocked.
+		e. Everything is done at user level - low overall speed.
+   In Galit's case:
+		a. Processes can run on different processors, so utilization can be
+		   high.
+		b. Like kernel-level threads, the scheduler is supplied by the OS so
+		   it must be sophisticated.
+		c. Require the OS to communicate (using pipes), relatively high 
+		   communication time.
+		d. Like kernel-level threads, if a process blocks, this does not affect
+		   the others. Meaning the ability to progress exists.
+		e. All oeprations require a kernel trap, and significant work.
+		   perhaps relatively low overall speed.
+
+
+4. Processes, as said in the previous exercise, do not share any of
+   the above. each process has its own stack, heap and global variables
+   from the point of the fork command and on.
+   However, kernel level threads and user level threads share between
+   them the heap and the global variables, but each one of them has
+   its own independent stack.
+
+5. A deadlock is a situation which occurs when a process or a thread
+   is entering a waiting mode because the resource they request is
+   currently held by another process\thread which is also waiting for
+   another resource held by another waiting process\thread
+   (circular waiting).
+   As with deadlock, livelock threads\processes are unable to make
+   further progress. However, the difference is that the threads are
+   not blocked - they are too busy to responding to each other to resume
+   work. In other words, livelock can arise when two or more tasks use the
+   same resource causing a circular dependency where those tasks keep
+   running forever.
+   An example of a deadlock (in real life) is the philosophers problem
+   (as mentioned in class): Five philosophers sit to dinner next to a
+   round table where a bowl of spaghetti is placed at the center.
+   Each philosoper needs two forks to grasp some spaghetti from the
+   bowl, but there is only one fork for each one of them. Every
+   philosopher takes the fork to his left, so that the fork to his
+   left is already picked up by another philosopher, creating a
+   situation they all sit there indefinitely.
+   An example of a livelock (in real life): consider two men attempting
+   to pass each other in a corridor. Liav moves to his left to let Itamar
+   pass, while Itamar moves to his right to let Liav pass. Seeing they are
+   still blocking each other, Liav moves to his right while Itamar moves to
+   his left, and so on.
+
+
+
+
